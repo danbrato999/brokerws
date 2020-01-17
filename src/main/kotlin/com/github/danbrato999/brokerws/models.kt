@@ -8,7 +8,3 @@ data class OutgoingMessage(val targets: List<String>, val data: JsonObject) {
     json.getJsonObject("data")
   )
 }
-
-data class IncomingMessage(val target: String, val data: JsonObject) {
-  fun toJson() : JsonObject = JsonObject.mapFrom(this)
-}

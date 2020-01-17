@@ -32,6 +32,7 @@ dependencies {
   implementation "io.vertx:vertx-rabbitmq-client:$vertxVersion"
   implementation "io.vertx:vertx-lang-kotlin:$vertxVersion"
   implementation 'io.github.jponge:vertx-boot:1.1.2'
+  implementation 'ch.qos.logback:logback-classic:1.2.3'
 
   testImplementation "io.vertx:vertx-junit5:$vertxVersion"
   testRuntimeOnly "org.junit.jupiter:junit-jupiter-engine:$junitJupiterEngineVersion"

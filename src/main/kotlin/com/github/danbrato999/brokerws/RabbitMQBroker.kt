@@ -8,6 +8,7 @@ import io.vertx.core.json.JsonObject
 import io.vertx.kotlin.rabbitmq.rabbitMQOptionsOf
 import io.vertx.rabbitmq.RabbitMQClient
 import io.vertx.rabbitmq.RabbitMQConsumer
+import org.slf4j.LoggerFactory
 
 class RabbitMQBroker : AbstractVerticle() {
   override fun start(startPromise: Promise<Void>) {
@@ -34,25 +35,6 @@ class RabbitMQBroker : AbstractVerticle() {
       }
   }
 
-  private fun initFanOutExchanges(client: RabbitMQClient, exchanges: List<String>) = exchanges
-    .map { exchange ->
-      Future.future<Void> {
-        client.exchangeDeclare(exchange, "fanout", true, false, it)
-      }
-    }.let(CompositeFuture::join)
-
-  private fun bindQueue(client: RabbitMQClient, exchange: String) : Future<String> = Future.future<JsonObject> {
-    client.queueDeclare("", false, true, true, it)
-  }.compose {
-    val queue = it.getString("queue")
-
-    Future.future<Void> { promise ->
-      client.queueBind(queue, exchange, "", promise)
-    }.map {
-      queue
-    }
-  }
-
   private fun createOutgoingConsumer(client: RabbitMQClient, queue: String) = Future.future<RabbitMQConsumer> {
     client.basicConsumer(queue, it)
   }.map { consumer ->
@@ -66,7 +48,30 @@ class RabbitMQBroker : AbstractVerticle() {
       val message = JsonObject().put("body", it.body().encode())
       client.basicPublish(exchange, "", message) { ar ->
         if (ar.failed())
-          println("Failed to forward message -> ${ar.cause()}")
+          Logger.error("Failed to publish message to RabbitMQ", ar.cause())
+      }
+    }
+  }
+
+  companion object {
+    private val Logger = LoggerFactory.getLogger(RabbitMQBroker::class.java)
+
+    private fun initFanOutExchanges(client: RabbitMQClient, exchanges: List<String>) = exchanges
+      .map { exchange ->
+        Future.future<Void> {
+          client.exchangeDeclare(exchange, "fanout", true, false, it)
+        }
+      }.let(CompositeFuture::join)
+
+    private fun bindQueue(client: RabbitMQClient, exchange: String) : Future<String> = Future.future<JsonObject> {
+      client.queueDeclare("", false, true, true, it)
+    }.compose {
+      val queue = it.getString("queue")
+
+      Future.future<Void> { promise ->
+        client.queueBind(queue, exchange, "", promise)
+      }.map {
+        queue
       }
     }
   }
