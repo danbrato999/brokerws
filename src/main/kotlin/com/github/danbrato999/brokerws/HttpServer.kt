@@ -42,7 +42,7 @@ class HttpServer : AbstractVerticle() {
     )
 
     connection.textMessageHandler(textMessageHandler(uid))
-    connection.close {
+    connection.closeHandler {
       Logger.debug("Connection $uid closed")
       connectionsMap.remove(uid)
     }
@@ -55,10 +55,11 @@ class HttpServer : AbstractVerticle() {
   private fun initOutgoingHandler() {
     vertx.eventBus().consumer<JsonObject>(OUTGOING_MESSAGES_ADDRESS) {
       val message = OutgoingMessage(it.body())
+      val data = message.data.encode()
       message
         .targets
         .forEach { key ->
-          connectionsMap[key]?.writeTextMessage(message.data.encode())
+          connectionsMap[key]?.writeTextMessage(data)
         }
     }
   }
