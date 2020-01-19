@@ -1,4 +1,4 @@
-version: '3.1'
+version: '2.4'
 
 services:
   rabbitmq:
@@ -6,3 +6,11 @@ services:
     ports:
       - 5672:5672
       - 15672:15672
+  brokerws:
+    image: danbrato999/brokerws
+    depends_on:
+      - rabbitmq
+    ports:
+      - 19050:9050
+    environment:
+      - RABBITMQ_URI=amqp://guest:guest@rabbitmq:5672

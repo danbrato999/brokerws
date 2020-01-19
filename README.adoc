@@ -2,7 +2,31 @@
 
 image:https://img.shields.io/badge/vert.x-3.8.4-purple.svg[link="https://vertx.io"]
 
-This application was generated using http://start.vertx.io
+Small http server to handle distributed WebSocket connections, allowing to scale the server horizontally.
+
+At the core of the architecture there should be a Message Queue, that will receive all the messages posted by the
+different WebSocket clients, as well as being the source for outgoing messages to the WebSockets. As of now, a RabbitMQ
+implementation is provided.
+
+Each client can connect to the endpoint */ws/:entity_type/:id*. A composite id (entity_type + . + id) will be used
+in the server to store the connection. To be able to send messages to the WebSocket clients, there must be an exchange
+in the RabbitMQ server that should be publishing messages in the following format
+
+[source,json]
+----
+{
+  "targets": ["any.first", "any.second"],
+  "data": {
+    //Any valid json object
+  }
+}
+----
+
+Each message received in any WebSocket connection will be published as-if to a different RabbitMQ exchange. You can
+configure both exchanges in application.conf.
+
+You can start playing around with the server using the provided docker-compose. If the brokerws fails to start, it might
+be because the RabbitMQ instance is not up yet, so you can restart it with docker-compose restart brokerws
 
 == Building
 
@@ -20,12 +44,3 @@ To run your application:
 ```
 ./gradlew clean run
 ```
-
-== Help
-
-* https://vertx.io/docs/[Vert.x Documentation]
-* https://stackoverflow.com/questions/tagged/vert.x?sort=newest&pageSize=15[Vert.x Stack Overflow]
-* https://groups.google.com/forum/?fromgroups#!forum/vertx[Vert.x User Group]
-* https://gitter.im/eclipse-vertx/vertx-users[Vert.x Gitter]
-
-
