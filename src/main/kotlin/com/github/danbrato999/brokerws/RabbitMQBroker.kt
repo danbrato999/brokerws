@@ -39,7 +39,7 @@ class RabbitMQBroker : AbstractVerticle() {
     client.basicConsumer(queue, it)
   }.map { consumer ->
     consumer.handler {
-      vertx.eventBus().publish(OUTGOING_MESSAGES_ADDRESS, it.body().toJson())
+      vertx.eventBus().publish(OUTGOING_MESSAGES_ADDRESS, it.body().toJsonObject())
     }
   }
 
