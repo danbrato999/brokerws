@@ -1,5 +1,6 @@
 package com.github.danbrato999.brokerws
 
+import com.github.danbrato999.brokerws.models.OutgoingMessage
 import io.vertx.core.CompositeFuture
 import io.vertx.core.Future
 import io.vertx.core.Handler
@@ -18,7 +19,7 @@ import java.util.concurrent.TimeUnit
 
 @DisplayName("Http server tests")
 @ExtendWith(VertxExtension::class)
-class HttpServerTest {
+class BrokerWsVerticleTest {
   private val defaultPort = 16969
 
   private val options = deploymentOptionsOf(
@@ -29,7 +30,7 @@ class HttpServerTest {
   @Test
   @DisplayName("Deployment with valid configurations")
   fun testServerDeployment(vertx: Vertx, testContext: VertxTestContext) {
-    vertx.deployVerticle(HttpServer(), options, testContext.succeeding {
+    vertx.deployVerticle(BrokerWsVerticle(), options, testContext.succeeding {
       testContext.completeNow()
     })
   }
@@ -37,7 +38,7 @@ class HttpServerTest {
   @Test
   @DisplayName("Deployment with missing configurations")
   fun testMissingConfigurationDeployment(vertx: Vertx, testContext: VertxTestContext) {
-    vertx.deployVerticle(HttpServer(), testContext.failing {
+    vertx.deployVerticle(BrokerWsVerticle(), testContext.failing {
       testContext.completeNow()
     })
   }
@@ -48,7 +49,7 @@ class HttpServerTest {
     val serverCheckpoint = testContext.checkpoint()
     val wsConnectionCheckpoint = testContext.checkpoint()
 
-    vertx.deployVerticle(HttpServer(), options, testContext.succeeding<String> {
+    vertx.deployVerticle(BrokerWsVerticle(), options, testContext.succeeding<String> {
       serverCheckpoint.flag()
       client.webSocket(defaultPort, "localhost", "/ws/junit/test001", testContext.succeeding { ws ->
         wsConnectionCheckpoint.flag()
@@ -73,7 +74,7 @@ class HttpServerTest {
       }
     }
 
-    vertx.deployVerticle(HttpServer::class.java.name, options, testContext.succeeding {
+    vertx.deployVerticle(BrokerWsVerticle::class.java.name, options, testContext.succeeding {
       client.webSocket(defaultPort, "localhost", "/ws/junit/test002", testContext.succeeding { ws ->
         repeat(messagesCount) {
           ws.writeTextMessage(messageContent.encode())
@@ -90,7 +91,7 @@ class HttpServerTest {
     val client = vertx.createHttpClient()
     val messagesCheckpoint = testContext.checkpoint(messagesCount)
 
-    vertx.deployVerticle(HttpServer::class.java.name, options, testContext.succeeding {
+    vertx.deployVerticle(BrokerWsVerticle::class.java.name, options, testContext.succeeding {
       client.webSocket(defaultPort, "localhost", "/ws/junit/test003", testContext.succeeding { ws ->
         ws.textMessageHandler(successMessageHandler(testContext, messagesCheckpoint))
         repeat(5) { sendOutgoingMessage(vertx, listOf("junit.test003")) }
@@ -109,7 +110,7 @@ class HttpServerTest {
       testContext.failNow(AssertionError("Sent a message to the wrong socket"))
     }
 
-    vertx.deployVerticle(HttpServer::class.java.name, options, testContext.succeeding {
+    vertx.deployVerticle(BrokerWsVerticle::class.java.name, options, testContext.succeeding {
       val clientsFuture = (4..15).map { clientId ->
         Future.future<WebSocket> { promise ->
           vertx.createHttpClient()
