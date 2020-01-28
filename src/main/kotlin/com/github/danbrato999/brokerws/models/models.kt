@@ -1,7 +1,9 @@
 package com.github.danbrato999.brokerws.models
 
+import io.vertx.codegen.annotations.DataObject
 import io.vertx.core.json.JsonObject
 
+@DataObject
 data class ConnectionSource(val entity: String, val id: String) {
   constructor(json: JsonObject) : this(json.getString("entity"), json.getString("id"))
   fun toJson() : JsonObject = JsonObject.mapFrom(this)

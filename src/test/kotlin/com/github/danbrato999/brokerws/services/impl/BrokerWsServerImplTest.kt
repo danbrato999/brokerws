@@ -1,10 +1,8 @@
 package com.github.danbrato999.brokerws.services.impl
 
 import com.github.danbrato999.brokerws.models.ConnectionSource
-import com.github.danbrato999.brokerws.services.WebSocketBroker
-import com.github.danbrato999.brokerws.services.WebSocketServerStore
+import com.github.danbrato999.brokerws.services.*
 import io.vertx.core.*
-import io.vertx.core.http.HttpServer
 import io.vertx.core.http.WebSocket
 import io.vertx.core.json.JsonObject
 import io.vertx.junit5.VertxExtension
@@ -13,9 +11,7 @@ import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.extension.ExtendWith
 
-import org.junit.jupiter.api.Assertions.assertTrue
 import org.mockito.Mockito.*
-import java.util.concurrent.TimeUnit
 
 @ExtendWith(VertxExtension::class)
 internal class BrokerWsServerImplTest {
@@ -116,33 +112,5 @@ internal class BrokerWsServerImplTest {
     })
 
     assertComplete(testContext, 10)
-  }
-
-  companion object {
-    private const val port = 16969
-    private val messageContent = JsonObject().put("ping", "pong")
-
-    inline fun <reified T> anyNonNull(): T = any<T>(T::class.java)
-
-    private fun startServer(
-      vertx: Vertx,
-      store: WebSocketServerStore,
-      broker: WebSocketBroker,
-      handler: Handler<AsyncResult<HttpServer>>
-    ) {
-      val server = BrokerWsServerImpl(vertx, store, broker)
-      vertx.createHttpServer()
-        .requestHandler(server.router())
-        .listen(port, handler)
-    }
-
-    private fun client(vertx: Vertx, source: ConnectionSource, handler: Handler<AsyncResult<WebSocket>>) {
-      vertx.createHttpClient()
-        .webSocket(port, "localhost", "/ws/${source.entity}/${source.id}", handler)
-    }
-
-    private fun assertComplete(testContext: VertxTestContext, seconds: Long = 5) {
-      assertTrue(testContext.awaitCompletion(seconds, TimeUnit.SECONDS), "Test failed to complete")
-    }
   }
 }

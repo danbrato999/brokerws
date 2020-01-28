@@ -9,6 +9,7 @@ import io.vertx.core.Future
 import io.vertx.core.Handler
 import io.vertx.core.Vertx
 import io.vertx.ext.web.Router
+import io.vertx.serviceproxy.ServiceProxyBuilder
 
 interface BrokerWsServer {
 
@@ -17,17 +18,30 @@ interface BrokerWsServer {
   companion object {
     fun create(
       vertx: Vertx,
+      store: WebSocketServerStore,
       rabbitMQBrokerConfig: RabbitMQBrokerConfig,
       handler: Handler<AsyncResult<BrokerWsServer>>
     ) {
-      val wsStore = WsConnectionStoreImpl()
-
       Future.future<WebSocketBroker> {
-        RabbitMQBroker.create(vertx, wsStore, rabbitMQBrokerConfig, it)
+        RabbitMQBroker.create(vertx, store, rabbitMQBrokerConfig, it)
       }
         .map { broker ->
-          BrokerWsServerImpl(vertx, wsStore, broker) as BrokerWsServer
+          BrokerWsServerImpl(vertx, store, broker) as BrokerWsServer
         }
+        .setHandler(handler)
+    }
+
+    fun create(
+      vertx: Vertx,
+      store: WebSocketServerStore,
+      brokerAddress: String,
+      handler: Handler<AsyncResult<BrokerWsServer>>
+    ) {
+      val broker = ServiceProxyBuilder(vertx)
+        .setAddress(brokerAddress)
+        .build(WebSocketBroker::class.java)
+
+      Future.succeededFuture(BrokerWsServerImpl(vertx, store, broker) as BrokerWsServer)
         .setHandler(handler)
     }
   }

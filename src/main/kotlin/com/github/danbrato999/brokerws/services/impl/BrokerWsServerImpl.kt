@@ -5,6 +5,7 @@ import com.github.danbrato999.brokerws.models.ConnectionSource
 import com.github.danbrato999.brokerws.services.BrokerWsServer
 import com.github.danbrato999.brokerws.services.WebSocketBroker
 import com.github.danbrato999.brokerws.services.WebSocketServerStore
+import io.vertx.core.Handler
 import io.vertx.core.Vertx
 import io.vertx.core.http.HttpMethod
 import io.vertx.ext.web.Router
@@ -37,8 +38,10 @@ class BrokerWsServerImpl(
       .withMessageHandler {
         webSocketBroker.receiveMessage(it)
       }.withCloseHandler {
-        if (webSocketServerStore.delete(it))
-          webSocketBroker.notifyConnectionClosed(it)
+        webSocketServerStore.delete(it, Handler { ar ->
+          if (ar.succeeded() && ar.result())
+            webSocketBroker.notifyConnectionClosed(it)
+        })
       }.build()
 
 
