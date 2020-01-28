@@ -9,7 +9,7 @@ import io.vertx.core.Future
 import io.vertx.core.Handler
 import io.vertx.core.json.JsonObject
 
-class WsConnectionStoreImpl : WebSocketServerStore {
+class WebSocketServerStoreImpl : WebSocketServerStore {
   private val connections = mutableSetOf<WebSocketConnection>()
 
   override fun store(connection: WebSocketConnection) : Boolean {

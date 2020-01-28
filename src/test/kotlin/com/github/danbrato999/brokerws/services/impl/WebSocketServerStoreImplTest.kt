@@ -4,19 +4,19 @@ import com.github.danbrato999.brokerws.models.ConnectionSource
 import com.github.danbrato999.brokerws.models.WebSocketConnection
 import io.vertx.core.http.ServerWebSocket
 import io.vertx.core.json.JsonObject
-import org.junit.jupiter.api.Test
-
-import org.junit.jupiter.api.Assertions.*
+import org.junit.jupiter.api.Assertions.assertFalse
+import org.junit.jupiter.api.Assertions.assertTrue
 import org.junit.jupiter.api.BeforeEach
+import org.junit.jupiter.api.Test
 import org.mockito.Mockito.*
 
-internal class WsConnectionStoreImplTest {
+internal class WebSocketServerStoreImplTest {
 
-  private lateinit var store: WsConnectionStoreImpl
+  private lateinit var store: WebSocketServerStoreImpl
 
   @BeforeEach
   fun init() {
-    store = WsConnectionStoreImpl()
+    store = WebSocketServerStoreImpl()
   }
 
   @Test

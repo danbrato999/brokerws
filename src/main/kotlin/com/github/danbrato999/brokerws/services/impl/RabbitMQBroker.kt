@@ -3,8 +3,8 @@ package com.github.danbrato999.brokerws.services.impl
 import com.github.danbrato999.brokerws.models.ConnectionSource
 import com.github.danbrato999.brokerws.models.OutgoingMessage
 import com.github.danbrato999.brokerws.models.RabbitMQBrokerConfig
-import com.github.danbrato999.brokerws.services.WebSocketBroker
 import com.github.danbrato999.brokerws.services.WebSocketBaseStore
+import com.github.danbrato999.brokerws.services.WebSocketBroker
 import io.vertx.core.*
 import io.vertx.core.json.JsonObject
 import io.vertx.kotlin.rabbitmq.rabbitMQOptionsOf

@@ -1,13 +1,13 @@
 package com.github.danbrato999.brokerws.services
 
 import com.github.danbrato999.brokerws.models.ConnectionSource
-import com.github.danbrato999.brokerws.services.impl.WsConnectionStoreImpl
+import com.github.danbrato999.brokerws.services.impl.WebSocketServerStoreImpl
 import io.vertx.core.Vertx
 import io.vertx.core.json.JsonObject
 import io.vertx.junit5.Checkpoint
-import io.vertx.serviceproxy.ServiceBinder
 import io.vertx.junit5.VertxExtension
 import io.vertx.junit5.VertxTestContext
+import io.vertx.serviceproxy.ServiceBinder
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.extension.ExtendWith
 
@@ -22,7 +22,7 @@ internal class BrokerWsServerTest {
       .register(WebSocketBroker::class.java, DummyBroker(messageCheckpoint))
 
 
-    startServer(vertx, WsConnectionStoreImpl(), BROKER_ADDRESS, testContext.succeeding {
+    startServer(vertx, WebSocketServerStoreImpl(), BROKER_ADDRESS, testContext.succeeding {
       client(vertx, ConnectionSource("junit", "test001"), testContext.succeeding { ws ->
         ws.writeTextMessage(messageContent.encode())
       })

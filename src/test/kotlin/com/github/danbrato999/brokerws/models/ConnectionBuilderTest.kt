@@ -1,10 +1,10 @@
 package com.github.danbrato999.brokerws.models
 
 import io.vertx.core.http.ServerWebSocket
+import org.junit.jupiter.api.Assertions.assertDoesNotThrow
+import org.junit.jupiter.api.Assertions.assertThrows
 import org.junit.jupiter.api.Test
-
-import org.junit.jupiter.api.Assertions.*
-import org.mockito.Mockito.*
+import org.mockito.Mockito.mock
 
 internal class ConnectionBuilderTest {
 

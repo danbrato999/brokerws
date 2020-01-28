@@ -3,7 +3,6 @@ package com.github.danbrato999.brokerws.services
 import com.github.danbrato999.brokerws.models.RabbitMQBrokerConfig
 import com.github.danbrato999.brokerws.services.impl.BrokerWsServerImpl
 import com.github.danbrato999.brokerws.services.impl.RabbitMQBroker
-import com.github.danbrato999.brokerws.services.impl.WsConnectionStoreImpl
 import io.vertx.core.AsyncResult
 import io.vertx.core.Future
 import io.vertx.core.Handler

@@ -2,7 +2,9 @@ package com.github.danbrato999.brokerws.services.impl
 
 import com.github.danbrato999.brokerws.models.ConnectionSource
 import com.github.danbrato999.brokerws.services.*
-import io.vertx.core.*
+import io.vertx.core.CompositeFuture
+import io.vertx.core.Future
+import io.vertx.core.Vertx
 import io.vertx.core.http.WebSocket
 import io.vertx.core.json.JsonObject
 import io.vertx.junit5.VertxExtension
@@ -10,8 +12,8 @@ import io.vertx.junit5.VertxTestContext
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.extension.ExtendWith
-
-import org.mockito.Mockito.*
+import org.mockito.Mockito.`when`
+import org.mockito.Mockito.mock
 
 @ExtendWith(VertxExtension::class)
 internal class BrokerWsServerImplTest {
@@ -49,7 +51,7 @@ internal class BrokerWsServerImplTest {
 
     val messagesCheckpoint = testContext.checkpoint(messagesCount)
 
-    val store = WsConnectionStoreImpl()
+    val store = WebSocketServerStoreImpl()
     val broker = mock(WebSocketBroker::class.java)
 
     `when`(broker.notifyConnectionClosed(anyNonNull())).thenReturn(broker)
@@ -78,7 +80,7 @@ internal class BrokerWsServerImplTest {
     )
     val messagesCheckpoint = testContext.checkpoint(targets.size)
 
-    val store = WsConnectionStoreImpl()
+    val store = WebSocketServerStoreImpl()
     val broker = mock(WebSocketBroker::class.java)
     `when`(broker.receiveMessage(anyNonNull())).thenReturn(broker)
     `when`(broker.notifyConnectionClosed(anyNonNull())).thenReturn(broker)

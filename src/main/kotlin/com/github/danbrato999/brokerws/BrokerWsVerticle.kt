@@ -2,7 +2,7 @@ package com.github.danbrato999.brokerws
 
 import com.github.danbrato999.brokerws.models.RabbitMQBrokerConfig
 import com.github.danbrato999.brokerws.services.BrokerWsServer
-import com.github.danbrato999.brokerws.services.impl.WsConnectionStoreImpl
+import com.github.danbrato999.brokerws.services.impl.WebSocketServerStoreImpl
 import io.vertx.core.AbstractVerticle
 import io.vertx.core.Future
 import io.vertx.core.Promise
@@ -16,7 +16,7 @@ class BrokerWsVerticle : AbstractVerticle() {
     val inMessageExchange = config.getJsonObject("in").getString("exchange")
 
     val rabbitMQBrokerConfig = RabbitMQBrokerConfig(uri, outMessageExchange, inMessageExchange)
-    val store = WsConnectionStoreImpl()
+    val store = WebSocketServerStoreImpl()
 
     Future.future<BrokerWsServer> { BrokerWsServer.create(vertx, store, rabbitMQBrokerConfig, it) }
       .map { it.router() }
