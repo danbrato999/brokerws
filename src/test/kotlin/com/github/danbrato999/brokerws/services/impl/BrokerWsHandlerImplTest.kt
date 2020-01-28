@@ -16,7 +16,7 @@ import org.mockito.Mockito.`when`
 import org.mockito.Mockito.mock
 
 @ExtendWith(VertxExtension::class)
-internal class BrokerWsServerImplTest {
+internal class BrokerWsHandlerImplTest {
 
   @Test
   fun testWebSocketHandling(vertx: Vertx, testContext: VertxTestContext) {

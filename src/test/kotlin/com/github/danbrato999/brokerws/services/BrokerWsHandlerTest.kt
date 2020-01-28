@@ -12,7 +12,7 @@ import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.extension.ExtendWith
 
 @ExtendWith(VertxExtension::class)
-internal class BrokerWsServerTest {
+internal class BrokerWsHandlerTest {
 
   @Test
   fun testProxyBroker(vertx: Vertx, testContext: VertxTestContext) {
