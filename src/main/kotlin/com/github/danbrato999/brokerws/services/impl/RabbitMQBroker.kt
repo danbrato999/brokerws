@@ -7,10 +7,10 @@ import com.github.danbrato999.brokerws.services.WebSocketBaseStore
 import com.github.danbrato999.brokerws.services.WebSocketBroker
 import io.vertx.core.*
 import io.vertx.core.json.JsonObject
+import io.vertx.core.logging.LoggerFactory
 import io.vertx.kotlin.rabbitmq.rabbitMQOptionsOf
 import io.vertx.rabbitmq.RabbitMQClient
 import io.vertx.rabbitmq.RabbitMQConsumer
-import org.slf4j.LoggerFactory
 
 class RabbitMQBroker private constructor(
   private val wsStore: WebSocketBaseStore,
@@ -23,6 +23,7 @@ class RabbitMQBroker private constructor(
   }
 
   override fun receiveMessage(message: JsonObject): WebSocketBroker {
+    Logger.debug("Forwarding new incoming message -> $message")
     client.basicPublish(forwardExchange, "", JsonObject().put("body", message.encode())) { ar ->
       if (ar.failed())
         Logger.error("Failed to publish message to RabbitMQ", ar.cause())
@@ -39,6 +40,7 @@ class RabbitMQBroker private constructor(
     client.basicConsumer(queue, it)
   }.map { consumer ->
     consumer.handler {
+      Logger.debug("Received new outgoing message from queue -> ${it.body()}")
       val message = OutgoingMessage(it.body().toJsonObject())
       wsStore.broadcast(message.targets, message.data)
     }
@@ -47,7 +49,7 @@ class RabbitMQBroker private constructor(
   }
 
   companion object {
-    private val Logger = LoggerFactory.getLogger(RabbitMQBroker::class.java)
+    private val Logger = LoggerFactory.getLogger(WebSocketBroker::class.java)
 
     fun create(
       vertx: Vertx,
