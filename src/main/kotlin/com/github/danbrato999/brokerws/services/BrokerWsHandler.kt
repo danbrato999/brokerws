@@ -23,7 +23,8 @@ interface BrokerWsHandler {
       handler: Handler<AsyncResult<BrokerWsHandler>>
     ) {
       Future.future<WebSocketBroker> {
-        RabbitMQBroker.create(vertx, store, rabbitMQBrokerConfig, it)
+        RabbitMQBroker(store, rabbitMQBrokerConfig)
+          .start(vertx, it)
       }
         .map { broker ->
           BrokerWsHandlerImpl(store, broker) as BrokerWsHandler

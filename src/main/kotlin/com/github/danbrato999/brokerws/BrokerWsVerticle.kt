@@ -2,6 +2,7 @@ package com.github.danbrato999.brokerws
 
 import com.github.danbrato999.brokerws.models.ConnectionSource
 import com.github.danbrato999.brokerws.models.RabbitMQBrokerConfig
+import com.github.danbrato999.brokerws.models.RabbitMQExchangeQueueConfig
 import com.github.danbrato999.brokerws.services.BrokerWsHandler
 import com.github.danbrato999.brokerws.services.impl.WebSocketServerStoreImpl
 import io.vertx.core.AbstractVerticle
@@ -15,10 +16,14 @@ class BrokerWsVerticle : AbstractVerticle() {
   override fun start(startPromise: Promise<Void>) {
     val config = config().getJsonObject("rabbitmq")
     val uri = config.getString("uri")
-    val outMessageExchange = config.getJsonObject("out").getString("exchange")
-    val inMessageExchange = config.getJsonObject("in").getString("exchange")
 
-    val rabbitMQBrokerConfig = RabbitMQBrokerConfig(uri, outMessageExchange, inMessageExchange)
+    val outMessageConfig = RabbitMQExchangeQueueConfig(
+      config.getJsonObject("out")
+    )
+    val inMessageExchange = config.getJsonObject("in").getString("exchange")
+    val eventsMessageExchange = config.getJsonObject("events").getString("exchange")
+
+    val rabbitMQBrokerConfig = RabbitMQBrokerConfig(uri, outMessageConfig, inMessageExchange, eventsMessageExchange)
     val store = WebSocketServerStoreImpl()
 
     Future.future<BrokerWsHandler> { BrokerWsHandler.create(vertx, store, rabbitMQBrokerConfig, it) }
