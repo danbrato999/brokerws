@@ -23,7 +23,8 @@ object RabbitMQStarter {
     }
       .compose {
         Future.future<JsonObject> {
-          client.queueDeclare(config.queue, config.durable, true, true, it)
+          val isDedicated = config.queue.isBlank()
+          client.queueDeclare(config.queue, config.durable, isDedicated, isDedicated, it)
         }
       }
       .compose {
