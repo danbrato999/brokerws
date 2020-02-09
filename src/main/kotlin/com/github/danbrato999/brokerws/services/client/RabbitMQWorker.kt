@@ -7,13 +7,13 @@ import io.vertx.core.Future
 import io.vertx.core.Handler
 import io.vertx.core.Vertx
 import io.vertx.core.json.JsonObject
-import org.slf4j.LoggerFactory
 import io.vertx.kotlin.rabbitmq.rabbitMQOptionsOf
 import io.vertx.rabbitmq.RabbitMQClient
 import io.vertx.rabbitmq.RabbitMQConsumer
+import org.slf4j.LoggerFactory
 
 class RabbitMQWorker(
-  private val config: RabbitMQWorkerConfig
+  private val config: RabbitMQClientConfig
 ) : BrokerWsWorker {
   private lateinit var client: RabbitMQClient
 
@@ -24,7 +24,7 @@ class RabbitMQWorker(
 
     Logger.info("Sending message $outgoingMessage on exchange ${config.outgoingMessages}")
 
-    client.basicPublish(config.outgoingMessages, "", JsonObject().put("body", outgoingMessage)) {
+    client.basicPublish(config.outgoingMessages.exchange, "", JsonObject().put("body", outgoingMessage)) {
       if (it.failed())
         Logger.error("Failed to send message to BrokerWS", it.cause())
     }
@@ -35,7 +35,7 @@ class RabbitMQWorker(
 
     Future.future<Void> { client.start(it) }
       .compose {
-        RabbitMQStarter.initFanOutExchanges(client, listOf(config.outgoingMessages))
+        RabbitMQStarter.initFanOutExchanges(client, listOf(config.outgoingMessages.exchange))
       }
       .compose {
         RabbitMQStarter.initMessageConfig(client, config.incomingMessages)

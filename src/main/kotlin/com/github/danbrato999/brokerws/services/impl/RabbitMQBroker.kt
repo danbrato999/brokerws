@@ -1,10 +1,13 @@
 package com.github.danbrato999.brokerws.services.impl
 
 import com.github.danbrato999.brokerws.models.*
-import com.github.danbrato999.brokerws.services.WebSocketBaseStore
+import com.github.danbrato999.brokerws.services.BrokerWsStore
 import com.github.danbrato999.brokerws.services.WebSocketBroker
 import com.github.danbrato999.brokerws.utils.RabbitMQStarter
-import io.vertx.core.*
+import io.vertx.core.AsyncResult
+import io.vertx.core.Future
+import io.vertx.core.Handler
+import io.vertx.core.Vertx
 import io.vertx.core.json.JsonObject
 import io.vertx.kotlin.rabbitmq.rabbitMQOptionsOf
 import io.vertx.rabbitmq.RabbitMQClient
@@ -12,14 +15,14 @@ import io.vertx.rabbitmq.RabbitMQConsumer
 import org.slf4j.LoggerFactory
 
 class RabbitMQBroker(
-  private val wsStore: WebSocketBaseStore,
-  private val config: RabbitMQBrokerConfig
+  private val wsStore: BrokerWsStore,
+  private val config: RabbitMQClientConfig
 ) : WebSocketBroker {
   private lateinit var client: RabbitMQClient
 
   override fun notifyNewConnection(source: ConnectionSource): WebSocketBroker {
     val event = BrokerWsConnectionEvent(WsConnectionEventType.Connection, source)
-    client.basicPublish(config.events, "", event.toRabbitMQ()) {
+    client.basicPublish(config.events.exchange, "", event.toRabbitMQ()) {
       if (it.failed())
         Logger.error("Failed to notify new connection", it.cause())
     }
@@ -29,7 +32,7 @@ class RabbitMQBroker(
 
   override fun receiveMessage(message: JsonObject): WebSocketBroker {
     Logger.debug("Forwarding new incoming message -> $message")
-    client.basicPublish(config.incomingMessages, "", JsonObject().put("body", message.encode())) { ar ->
+    client.basicPublish(config.incomingMessages.exchange, "", JsonObject().put("body", message.encode())) { ar ->
       if (ar.failed())
         Logger.error("Failed to publish message to RabbitMQ", ar.cause())
     }
@@ -39,7 +42,7 @@ class RabbitMQBroker(
 
   override fun notifyConnectionClosed(source: ConnectionSource): WebSocketBroker {
     val event = BrokerWsConnectionEvent(WsConnectionEventType.Disconnection, source)
-    client.basicPublish(config.events, "", event.toRabbitMQ()) {
+    client.basicPublish(config.events.exchange, "", event.toRabbitMQ()) {
       if (it.failed())
         Logger.error("Failed to notify connection closed", it.cause())
     }
@@ -52,10 +55,12 @@ class RabbitMQBroker(
 
     Future.future<Void> { client.start(it) }
       .compose {
-        RabbitMQStarter.initFanOutExchanges(client, listOf(config.incomingMessages, config.events))
+        RabbitMQStarter.initFanOutExchanges(client, listOf(config.incomingMessages.exchange, config.events.exchange))
       }
       .compose {
-        RabbitMQStarter.initMessageConfig(client, config.outgoingMessages)
+        // We make sure all instances of RabbitMQBroker receive the outgoing messages since the ws connections
+        // are distributed across different servers
+        RabbitMQStarter.initMessageConfig(client, RabbitMQExchangeQueueConfig(config.outgoingMessages.exchange))
       }
       .compose {
         withMessageConsumer(it.queue)

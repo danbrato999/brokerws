@@ -4,7 +4,7 @@ plugins {
 }
 
 group = 'com.github.danbrato999'
-version = '1.0.2'
+version = '1.0.3'
 
 repositories {
   mavenCentral()
@@ -21,6 +21,7 @@ dependencies {
   api "io.vertx:vertx-core:$vertxVersion"
   api "io.vertx:vertx-rabbitmq-client:$vertxVersion"
   api "io.vertx:vertx-service-proxy:$vertxVersion"
+  api "io.vertx:vertx-redis-client:$vertxVersion"
   implementation "io.vertx:vertx-lang-kotlin:$vertxVersion"
   compileOnly "io.vertx:vertx-codegen:$vertxVersion"
   kapt "io.vertx:vertx-codegen:$vertxVersion:processor"
