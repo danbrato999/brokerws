@@ -5,4 +5,5 @@ import io.vertx.core.json.JsonObject
 
 interface BrokerWsWorker {
   fun sendMessage(source: ConnectionSource, message: JsonObject)
+  fun closeConnections(connections: List<ConnectionSource>, message: JsonObject)
 }

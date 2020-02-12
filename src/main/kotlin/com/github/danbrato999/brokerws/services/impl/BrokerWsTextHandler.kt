@@ -47,7 +47,7 @@ class BrokerWsTextHandler(
   }
 
   private fun terminate(ws: ServerWebSocket, request: HttpServerRequest) {
-    ws.reject()
+    ws.close()
     request
       .response()
       .setStatusCode(400)

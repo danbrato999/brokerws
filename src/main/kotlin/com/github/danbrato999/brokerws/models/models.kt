@@ -1,6 +1,7 @@
 package com.github.danbrato999.brokerws.models
 
 import io.vertx.codegen.annotations.DataObject
+import io.vertx.core.json.JsonArray
 import io.vertx.core.json.JsonObject
 
 @DataObject
@@ -35,14 +36,27 @@ data class RabbitMQExchangeQueueConfig(
 
 enum class WsConnectionEventType {
   Connection,
-  Disconnection
+  Disconnection,
+  Replaced
 }
 
-@DataObject
-data class BrokerWsConnectionEvent(val type: WsConnectionEventType, val source: ConnectionSource) {
+data class BrokerWsConnectionEvent(
+  val type: WsConnectionEventType,
+  val connections: List<ConnectionSource>,
+  val details: JsonObject? = null
+) {
+  constructor(
+    type: WsConnectionEventType,
+    source: ConnectionSource
+  ) : this(type, listOf(source))
+
   constructor(json: JsonObject) : this(
     WsConnectionEventType.valueOf(json.getString("type")),
-    ConnectionSource(json.getJsonObject("source"))
+    json.getJsonArray("connections", JsonArray())
+      .map { it as JsonObject }
+      .map { ConnectionSource(it) },
+    json.getJsonObject("details")
   )
+
   fun toJson() : JsonObject = JsonObject.mapFrom(this)
 }

@@ -2,7 +2,7 @@ package com.github.danbrato999.brokerws.services
 
 import com.github.danbrato999.brokerws.models.BrokerWsConnection
 import com.github.danbrato999.brokerws.models.ConnectionSource
-import com.github.danbrato999.brokerws.services.impl.BrokerWsMapStore
+import com.github.danbrato999.brokerws.services.impl.BrokerWsDefaultStore
 import io.vertx.core.AsyncResult
 import io.vertx.core.Handler
 import io.vertx.core.json.JsonObject
@@ -32,9 +32,9 @@ interface BrokerWsStore {
    * @param requestIds List of requestIds that identify the connections
    * @param message Message to send to the WebSocket before closing the connection
    */
-  fun close(requestIds: List<String>, message: JsonObject)
+  fun close(requestIds: List<String>, message: JsonObject?)
 
   companion object {
-    fun local(registry: ConnectionRegistry) : BrokerWsStore = BrokerWsMapStore(registry)
+    fun local(registry: ConnectionRegistry) : BrokerWsStore = BrokerWsDefaultStore(registry)
   }
 }

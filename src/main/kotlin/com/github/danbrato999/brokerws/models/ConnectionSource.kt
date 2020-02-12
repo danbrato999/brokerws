@@ -13,7 +13,7 @@ data class ConnectionSource(
   constructor(json: JsonObject) : this(
     json.getString("requestId", ""),
     json.getString("entityId"),
-    json.getString("")
+    json.getString("serverId", "")
   )
 
   fun toJson() : JsonObject =

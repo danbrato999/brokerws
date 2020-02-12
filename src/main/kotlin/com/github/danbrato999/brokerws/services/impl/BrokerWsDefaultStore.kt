@@ -9,38 +9,49 @@ import io.vertx.core.Future
 import io.vertx.core.Handler
 import io.vertx.core.json.JsonObject
 
-class BrokerWsMapStore(
+class BrokerWsDefaultStore(
   private val registry: ConnectionRegistry,
-  private val map: MutableMap<String, BrokerWsConnection<*>> = mutableMapOf()
+  private val connections: MutableList<BrokerWsConnection<*>> = mutableListOf()
 ) : BrokerWsStore {
   override fun store(connection: BrokerWsConnection<*>, handler: Handler<AsyncResult<String>>) {
-    if (map.containsKey(connection.source().requestId))
+    if (connections.findByRequestId(connection.source()) != null)
       handler.handle(Future.failedFuture("Connection ${connection.source()} already exists"))
     else {
-      map[connection.source().requestId] = connection
+      connections.add(connection)
       registry.add(connection.source(), handler)
     }
   }
 
   override fun broadcast(targets: List<ConnectionSource>, message: JsonObject) {
     targets
-      .forEach {
-        map[it.entityId]
-          ?.sendJsonMessage(message)
+      .flatMap { target ->
+        if (target.requestId == "")
+          connections.filter { it.source().entityId == target.entityId }
+        else
+          listOf(connections.findByRequestId(target))
       }
+      .forEach { conn -> conn?.sendJsonMessage(message) }
   }
 
   override fun deleteOne(source: ConnectionSource, handler: Handler<AsyncResult<String>>) {
-    map.remove(source.entityId)
+    connections.removeIf { it.source() == source }
     registry.delete(source, handler)
   }
 
-  override fun close(requestIds: List<String>, message: JsonObject) {
-    requestIds
-      .forEach { id ->
-        map[id]
-          ?.sendJsonMessage(message)
-          ?.close()
+  override fun close(requestIds: List<String>, message: JsonObject?) {
+    connections
+      .filter { it.source().requestId in requestIds }
+      .forEach { conn ->
+        if (message != null)
+          conn.sendJsonMessage(message)
+
+        conn.close()
       }
+  }
+
+  companion object {
+    private fun MutableList<BrokerWsConnection<*>>.findByRequestId(
+      source: ConnectionSource
+    ): BrokerWsConnection<*>? = this.find { it.source().requestId == source.requestId }
   }
 }

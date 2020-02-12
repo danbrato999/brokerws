@@ -65,6 +65,9 @@ class RabbitMQBroker(
       .compose {
         withMessageConsumer(it.queue)
       }
+      .compose {
+        withEventActionsConsumer()
+      }
       .map { this as WebSocketBroker }
       .setHandler(handler)
   }
@@ -78,6 +81,21 @@ class RabbitMQBroker(
       wsStore.broadcast(message.targets, message.data)
     }
   }
+
+  private fun withEventActionsConsumer() =
+    RabbitMQStarter.initMessageConfig(client, RabbitMQExchangeQueueConfig(config.events.exchange))
+      .compose {
+        Future.future<RabbitMQConsumer> { promise ->
+          client.basicConsumer(it.queue, promise)
+        }
+      }.map { consumer ->
+        consumer.handler { msg ->
+          val event = BrokerWsConnectionEvent(msg.body().toJsonObject())
+
+          if (event.type == WsConnectionEventType.Replaced)
+            wsStore.close(event.connections.map { it.requestId }, event.details)
+        }
+      }
 
   companion object {
     private val Logger = LoggerFactory.getLogger(WebSocketBroker::class.java)

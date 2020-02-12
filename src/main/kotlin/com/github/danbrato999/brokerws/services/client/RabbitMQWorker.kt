@@ -22,11 +22,24 @@ class RabbitMQWorker(
       .toJson()
       .encode()
 
-    Logger.info("Sending message $outgoingMessage on exchange ${config.outgoingMessages}")
-
     client.basicPublish(config.outgoingMessages.exchange, "", JsonObject().put("body", outgoingMessage)) {
       if (it.failed())
         Logger.error("Failed to send message to BrokerWS", it.cause())
+    }
+  }
+
+  override fun closeConnections(connections: List<ConnectionSource>, message: JsonObject) {
+    val event = BrokerWsConnectionEvent(
+      WsConnectionEventType.Replaced,
+      connections,
+      message
+    )
+      .toJson()
+      .encode()
+
+    client.basicPublish(config.events.exchange, "", JsonObject().put("body", event)) {
+      if (it.failed())
+        Logger.error("Error to send ws connection closing request", it.cause())
     }
   }
 
@@ -52,9 +65,14 @@ class RabbitMQWorker(
         }
       }
       .map { consumer ->
-        consumer.handler {
-          val event = BrokerWsConnectionEvent(it.body().toJsonObject())
-          handler.handle(event)
+        consumer.handler { msg ->
+          val event = BrokerWsConnectionEvent(msg.body().toJsonObject())
+
+          when (event.type) {
+            WsConnectionEventType.Connection -> event.connections.forEach { handler.handleNewConnection(it) }
+            WsConnectionEventType.Disconnection -> event.connections.forEach { handler.handleDisconnection(it) }
+            else -> Unit
+          }
         }
 
         this

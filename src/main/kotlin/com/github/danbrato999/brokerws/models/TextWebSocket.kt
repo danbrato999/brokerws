@@ -15,7 +15,7 @@ class TextWebSocket(
     return this
   }
 
-  override fun closeHandler(handler: (Void) -> Unit): BrokerWsConnection<String> {
+  override fun closeHandler(handler: (Void?) -> Unit): BrokerWsConnection<String> {
     ws.closeHandler(handler)
     return this
   }
