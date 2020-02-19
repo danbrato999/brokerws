@@ -12,6 +12,9 @@ interface ConnectionRegistry {
   fun add(source: ConnectionSource, handler: Handler<AsyncResult<String>>) : ConnectionRegistry
 
   @Fluent
+  fun list(handler: Handler<AsyncResult<List<ConnectionSource>>>) : ConnectionRegistry
+
+  @Fluent
   fun findByRequestId(requestId: String, handler: Handler<AsyncResult<ConnectionSource?>>) : ConnectionRegistry
 
   @Fluent

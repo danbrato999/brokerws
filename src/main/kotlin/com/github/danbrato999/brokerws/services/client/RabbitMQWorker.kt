@@ -28,6 +28,17 @@ class RabbitMQWorker(
     }
   }
 
+  override fun broadcast(connections: List<ConnectionSource>, message: JsonObject) {
+    val outgoingMessage = OutgoingMessage(connections, message)
+      .toJson()
+      .encode()
+
+    client.basicPublish(config.outgoingMessages.exchange, "", JsonObject().put("body", outgoingMessage)) {
+      if (it.failed())
+        Logger.error("Failed to broadcast message to BrokerWS", it.cause())
+    }
+  }
+
   override fun closeConnections(connections: List<ConnectionSource>, message: JsonObject) {
     val event = BrokerWsConnectionEvent(
       WsConnectionEventType.Replaced,

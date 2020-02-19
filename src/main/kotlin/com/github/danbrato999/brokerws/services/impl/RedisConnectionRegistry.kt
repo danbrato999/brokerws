@@ -28,6 +28,25 @@ class RedisConnectionRegistry(
     return this
   }
 
+  override fun list(handler: Handler<AsyncResult<List<ConnectionSource>>>): ConnectionRegistry {
+    Future.future<Response> {
+      redisApi.keys(PREFIX + "source.*", it)
+    }
+      .compose { keys ->
+        Future.future<Response> { promise ->
+          redisApi.mget(keys.map { it.toString() }, promise)
+        }
+      }
+      .map { list ->
+        list
+          .filterNotNull()
+          .map { ConnectionSource(JsonObject(it.toString())) }
+      }
+      .setHandler(handler)
+
+    return this
+  }
+
   override fun findByRequestId(
     requestId: String,
     handler: Handler<AsyncResult<ConnectionSource?>>
