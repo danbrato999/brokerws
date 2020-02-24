@@ -42,15 +42,7 @@ class BrokerWsTextHandler(
         webSocketBroker.notifyNewConnection(source)
         webSocket.accept()
       } else
-        terminate(webSocket, request)
+        webSocket.close()
     })
-  }
-
-  private fun terminate(ws: ServerWebSocket, request: HttpServerRequest) {
-    ws.close()
-    request
-      .response()
-      .setStatusCode(400)
-      .end()
   }
 }

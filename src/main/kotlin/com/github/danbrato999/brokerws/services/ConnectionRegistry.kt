@@ -22,4 +22,7 @@ interface ConnectionRegistry {
 
   @Fluent
   fun delete(source: ConnectionSource, handler: Handler<AsyncResult<String>>) : ConnectionRegistry
+
+  @Fluent
+  fun keepAlive(connections: List<ConnectionSource>, handler: Handler<AsyncResult<Int>>) : ConnectionRegistry
 }

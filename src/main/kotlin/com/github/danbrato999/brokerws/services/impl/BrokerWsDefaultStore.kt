@@ -7,7 +7,9 @@ import com.github.danbrato999.brokerws.services.ConnectionRegistry
 import io.vertx.core.AsyncResult
 import io.vertx.core.Future
 import io.vertx.core.Handler
+import io.vertx.core.Vertx
 import io.vertx.core.json.JsonObject
+import org.slf4j.LoggerFactory
 
 class BrokerWsDefaultStore(
   private val registry: ConnectionRegistry,
@@ -49,7 +51,23 @@ class BrokerWsDefaultStore(
       }
   }
 
+  override fun healthCheck(vertx: Vertx, delay: Long) {
+    vertx.setTimer(delay) {
+      registry.keepAlive(
+        connections
+          .map { it.source() },
+        Handler {
+          if (it.failed())
+            Logger.error("Failed to refresh connection status", it.cause())
+
+          healthCheck(vertx, delay)
+        }
+      )
+    }
+  }
+
   companion object {
+    private val Logger = LoggerFactory.getLogger(BrokerWsStore::class.java)
     private fun MutableList<BrokerWsConnection<*>>.findByRequestId(
       source: ConnectionSource
     ): BrokerWsConnection<*>? = this.find { it.source().requestId == source.requestId }

@@ -10,15 +10,17 @@ import io.vertx.core.json.JsonArray
 import io.vertx.core.json.JsonObject
 import io.vertx.redis.client.RedisAPI
 import io.vertx.redis.client.Response
+import java.time.Duration
 
 class RedisConnectionRegistry(
-  private val redisApi: RedisAPI
+  private val redisApi: RedisAPI,
+  private val timeout: Duration
 ) : ConnectionRegistry {
   override fun add(source: ConnectionSource, handler: Handler<AsyncResult<String>>): ConnectionRegistry {
     val byEntityStore = addRequestToEntity(source.entityId, source.requestId)
 
     val connStoreFuture = Future.future<Response> {
-      redisApi.set(listOf(mapKey(source.requestId), source.toJson().encode()), it)
+      redisApi.setex(mapKey(source.requestId), timeout.seconds.toString(), source.toJson().encode(), it)
     }
 
     CompositeFuture.all(connStoreFuture, byEntityStore)
@@ -108,6 +110,23 @@ class RedisConnectionRegistry(
         }
       }
       .map { source.requestId }
+      .setHandler(handler)
+
+    return this
+  }
+
+  override fun keepAlive(connections: List<ConnectionSource>, handler: Handler<AsyncResult<Int>>): ConnectionRegistry {
+    val futures = connections
+      .map { it.requestId }
+      .distinct()
+      .map { requestId ->
+        Future.future<Response> {
+          redisApi.expire(mapKey(requestId), timeout.seconds.toString(), it)
+        }
+      }
+
+    CompositeFuture.join(futures)
+      .map { futures.size }
       .setHandler(handler)
 
     return this
